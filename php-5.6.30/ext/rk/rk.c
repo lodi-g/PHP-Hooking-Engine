@@ -11,6 +11,12 @@ static zend_function_entry rk_functions[] = {
     { NULL, NULL, NULL }
 };
 
+#ifdef DEBUG
+#define RK_PRINTF(...) php_printf(__VA_ARGS__)
+#else
+#define RK_PRINTF(...)
+#endif
+
 static bool rk_hook(const char *method_name,
                     void (*hook)(INTERNAL_FUNCTION_PARAMETERS),
                     void (**original)(INTERNAL_FUNCTION_PARAMETERS))
@@ -18,44 +24,60 @@ static bool rk_hook(const char *method_name,
   zend_function *function;
 
   if (!hook || !original) {
-    php_printf("Couldn't hook, one of the functions is NULL");
+    RK_PRINTF("Couldn't hook, one of the functions is NULL");
     return false;
   }
 
 
 
-  HashTable *ft = CG(function_table);
-  int i = ft->nNumOfElements;
-  uint32_t ip = ft->nInternalPointer;
-
-  php_printf("There is %d functions in the function table\n", i);
+  HashTable *ct = CG(class_table);
 
   int j = 0;
-  Bucket buck = ft->arData[j];
+  Bucket buck = ct->arData[j];
 
-  while (i--)
+  while (++j != ct->nNumOfElements)
     {
-      php_printf("=> '%s'\n", buck.key->val);
-      buck = ft->arData[++j];
+      if (!strcmp(buck.key->val, "pdo"))
+        {
+          RK_PRINTF("PDO found!\n");
+
+          int i = 0;
+          zend_class_entry *ft = buck.val.value.ce;
+
+          function = ft->constructor;
+          RK_PRINTF("ClassEntry: %s\n", ft->constructor->internal_function.function_name->val);
+
+        }
+      buck = ct->arData[j];
     }
 
-
-  if ((function = zend_hash_str_find_ptr(CG(function_table), method_name, strlen(method_name))) != NULL) {
-		*original = function->internal_function.handler;
-		function->internal_function.handler = *hook;
-		php_printf("Successfully hooked function '%s' (original: %p) -> (hook: %p)\n", method_name, &original, &hook);
-		return true;
-	} else {
-		php_printf("Unable to locate function '%s' in global function table.\n", method_name);
-		return false;
-	}
+	*original = function->internal_function.handler;
+	function->internal_function.handler = *hook;
+	RK_PRINTF("Successfully hooked function '%s' (original: %p) -> (hook: %p)\n", function->internal_function.function_name->val, &original, &hook);
 }
 
 void (*original)(zend_execute_data *, zval *);
 
 PHP_FUNCTION(hooked_dbh_constructor)
 {
-	php_printf("Hook was called!\n");
+  zval *object = getThis();
+	char *data_source;
+	int data_source_len;
+	char *colon;
+	char *username=NULL, *password=NULL;
+	int usernamelen, passwordlen;
+	zval *options = NULL;
+	char alt_dsn[512];
+	int call_factory = 1;
+
+	if (FAILURE == zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|s!s!a!", &data_source, &data_source_len,
+				&username, &usernamelen, &password, &passwordlen, &options)) {
+		ZVAL_NULL(object);
+		return;
+	}
+
+  php_printf("Hook was called with parameters: %s:%s\nNow calling the original function...\n\n", username, password);
+
   original(execute_data, return_value);
 }
 
