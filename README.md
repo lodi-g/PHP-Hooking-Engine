@@ -21,5 +21,8 @@ An hooking engine for PHP: allows anyone to hook a builtin PHP function or class
 * `php -r '$dbh = new PDO("mysql:host=localhost;dbname=db", "user", "pass");'`
 * These are only the tests I used to test the engine. You can add as many as you want.
 
+### Example
+<p align="center"><img src="http://i.imgur.com/UfhCCcf.png" alt="PDO::__construct hooked"/></p>
+
 ### Last note
 * I won't explain how to add your own hooks, you have to figure that yourself.
