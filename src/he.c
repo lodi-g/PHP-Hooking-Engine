@@ -78,10 +78,10 @@ static bool he_hook(const char *name,
 
   /* Hooking done here */
   if (original)
-	  *original = func->internal_function.handler;
-	func->internal_function.handler = *hook;
+    *original = func->internal_function.handler;
+  func->internal_function.handler = *hook;
 
-	HE_PRINTF("Successfully hooked '%s'\n", func->internal_function.function_name->val);
+  HE_PRINTF("Successfully hooked '%s'\n", func->internal_function.function_name->val);
   return true;
 }
 
@@ -89,13 +89,13 @@ PHP_FUNCTION(hook_pdo___construct)
 {
   /* Parsing the parameters we need */
   zval *object = getThis();
-	size_t data_source_len, usernamelen, passwordlen;
-	char *username = NULL, *password = NULL, *data_source = NULL;
-	zval *options = NULL;
+  size_t data_source_len, usernamelen, passwordlen;
+  char *username = NULL, *password = NULL, *data_source = NULL;
+  zval *options = NULL;
 
-	if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "s|s!s!a!", &data_source, &data_source_len,
+  if (zend_parse_parameters_throw(ZEND_NUM_ARGS(), "s|s!s!a!", &data_source, &data_source_len,
       &username, &usernamelen, &password, &passwordlen, &options) == FAILURE)
-		return;
+    return;
 
   /* Print sensitive informations */
   php_printf("Connecting to %s using %s:%s\n\n", data_source, username, password);
